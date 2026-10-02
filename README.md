@@ -4,6 +4,8 @@ Companion tools, Word and Excel templates, and a fully worked mock DSUR for the 
 
 **Author:** Dr. Hafez Selim, MD, PhD · **Publisher:** [Selim Medical Press](https://abdu94-hash.github.io/selim-medical-press/)
 
+**[Open the free DSUR field guide](https://abdu94-hash.github.io/dsur-workbench/guide/)**: the point of every DSUR section, what its reviewer asks, how much detail each program stage needs, and the take-home messages and a self-check for each chapter.
+
 All data are fictional. Word and Excel files download from each folder; the browser tools run online from GitHub Pages or offline from a downloaded copy.
 
 ## Folders
@@ -13,6 +15,7 @@ All data are fictional. Word and Excel files download from each folder; the brow
 | [`worked-example/`](worked-example/) | A complete, annotated mock DSUR for Case B (Word) and its data workbook (Excel) |
 | [`templates/`](templates/) | Annotated DSUR shell: every E2F section with guidance text and "nothing to report" wording (Word) |
 | [`cases/`](cases/) | The six fictional case files used throughout the book (Word) |
+| [`guide/`](guide/) | The interactive field guide (HTML; [open online](https://abdu94-hash.github.io/dsur-workbench/guide/)) |
 | [`tools/`](tools/) | Interactive browser tools (HTML) |
 | `ch01/` … `ch17/` | Each chapter's templates, exercise files and links to its tools |
 | [`UPDATES.md`](UPDATES.md) | Regulatory changes since publication |
