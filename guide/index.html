@@ -43,7 +43,7 @@ p{margin:0 0 1rem}
 
 /* rail */
 .rail{position:fixed;inset:0 auto 0 0;width:var(--rail);background:var(--navy);color:var(--rail-ink);overflow-y:auto;padding:28px 0 40px;z-index:30;scrollbar-width:thin;scrollbar-color:var(--navy3) transparent}
-.brand{display:block;padding:0 26px 22px;color:#fff;text-decoration:none;border-bottom:1px solid var(--navy3)}
+.rail a.brand{display:block;padding:0 26px 22px;color:#fff;text-decoration:none;border-left:0;border-bottom:1px solid var(--navy3);background:none}
 .brand b{display:block;font:600 1.5rem/1.1 var(--display)}
 .brand span{font:500 .95rem/1.4 var(--display);color:var(--rail-mute);letter-spacing:.02em}
 .rail h4{font:500 .9rem/1.3 var(--display);color:var(--rail-mute);margin:24px 26px 8px;letter-spacing:.02em}
@@ -483,7 +483,7 @@ function notFound() {
 
 function mark() {
   const h = location.hash || '#/';
-  document.querySelectorAll('#rail a').forEach(a => a.getAttribute('href') === h ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  document.querySelectorAll('#rail li a').forEach(a => a.getAttribute('href') === h ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
 }
 
 function route() {
