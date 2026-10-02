@@ -91,7 +91,7 @@ footer p{margin:0 0 .4rem;max-width:52rem}
 .ways div{border-top:2px solid var(--navy);padding-top:14px}
 .ways p{font-size:.98rem;color:var(--mute);margin:.3rem 0 .5rem}
 .ways a{font-family:var(--display);font-weight:500;font-size:1rem;letter-spacing:.01em}
-.part{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:32px;padding:30px 0;border-top:1px solid var(--line)}
+.part{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:32px;align-items:start;padding:30px 0;border-top:1px solid var(--line)}
 .part:first-of-type{border-top:0}
 .part h3{font-size:1.35rem;font-weight:600;margin-bottom:.5rem}
 .part h3 small{display:block;font-weight:500;font-size:.95rem;color:var(--mute);margin-bottom:2px}
@@ -100,7 +100,7 @@ footer p{margin:0 0 .4rem;max-width:52rem}
 .part li{display:grid;grid-template-columns:2.2em 1fr;padding:3px 0}
 .part li span{font-family:var(--display);color:var(--mute)}
 figure{margin:0}
-.fig{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px}
+.fig{display:block;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px}
 .fig img{display:block;width:100%;height:auto}
 figcaption{font-size:.85rem;color:var(--mute);margin-top:6px}
 
@@ -311,7 +311,7 @@ function home() {
         <p>${esc(p.intro)}</p>
         <ol>${p.chapters.map(n => `<li><span>${n}</span><a href="${chLink(n)}">${esc(CH[n].title)}</a></li>`).join('')}</ol>
       </div>
-      <figure class="fig"><img src="img/${p.map}.webp" width="1400" height="923" loading="lazy" alt="Map of Part ${p.num}, ${esc(p.title)}: its chapters and the main point of each."></figure>
+      <figure><a class="fig" href="img/${p.map}.webp" target="_blank" rel="noopener"><img src="img/${p.map}.webp" width="1400" height="923" loading="lazy" alt="Map of Part ${p.num}, ${esc(p.title)}: its chapters and the main point of each."></a><figcaption>Part ${p.num} map. Select it to open full size.</figcaption></figure>
     </section>`).join('');
   return `
   <header class="hero">
