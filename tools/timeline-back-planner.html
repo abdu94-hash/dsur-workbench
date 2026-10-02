@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSUR Timeline Back-Planner</title>
+<meta name="description" content="Back-plan a DSUR from its data lock point: fills in the calendar date of every milestone in the 60-day model from Writing the DSUR (Chapter 3, Appendix C.1).">
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #1d2733; --muted: #5a6878; --line: #d6dde6;
+  --head: #e8edf4; --accent: #1f4e8c; --accent-ink: #ffffff; --warn-bg: #fff4ce; --warn-ink: #6b4e00;
+  --bad-bg: #fde2e1; --bad-ink: #8a1c17; --ok-ink: #1d6b3a; --wkend: #fff4ce; --row-off: #eef1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171d; --card: #1a2129; --ink: #e4e9ef; --muted: #9aa8b8; --line: #2e3945;
+    --head: #24303c; --accent: #7fb0f0; --accent-ink: #0d1520; --warn-bg: #3d3110; --warn-ink: #f3d98b;
+    --bad-bg: #44201e; --bad-ink: #f5b3ae; --ok-ink: #8fd6a8; --wkend: #3d3110; --row-off: #20272f;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 20px; max-width: 75ch; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 18px; align-items: start; }
+label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 4px; }
+.hint { color: var(--muted); font-size: .8rem; margin-top: 3px; }
+input[type="text"], input[type="date"], input[type="number"], textarea {
+  width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+}
+textarea { min-height: 62px; resize: vertical; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+button { font: inherit; font-weight: 600; border-radius: 6px; padding: 7px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--card); color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; }
+th { background: var(--head); font-size: .82rem; text-transform: none; }
+td.num input { width: 5.2em; text-align: right; padding: 4px 6px; }
+td.date { white-space: nowrap; font-weight: 600; }
+tr.off td { background: var(--row-off); color: var(--muted); }
+tr.off td.date { font-weight: 400; text-decoration: line-through; }
+tr.dlp td { font-weight: 600; }
+.flag { display: inline-block; font-size: .78rem; padding: 1px 7px; border-radius: 10px; background: var(--wkend); color: var(--warn-ink); white-space: nowrap; }
+.wd { color: var(--muted); }
+.msgs { margin: 0; padding-left: 18px; }
+.msgs li { margin: 3px 0; }
+.msgs li.bad { color: var(--bad-ink); }
+.msgs li.warn { color: var(--warn-ink); }
+.msgs li.ok { color: var(--ok-ink); }
+.note { color: var(--muted); font-size: .82rem; }
+.print-only { display: none; }
+footer { color: var(--muted); font-size: .8rem; margin-top: 24px; }
+@media print {
+  :root { --bg: #fff; --card: #fff; --ink: #000; --muted: #444; --line: #999; --head: #e8edf4; --wkend: #fff4ce; --row-off: #fff; }
+  body { font-size: 10.5pt; }
+  main { padding: 0; max-width: none; }
+  .no-print, .controls, .buttons, td.inc, th.inc { display: none !important; }
+  .print-only { display: block; }
+  .card { border: none; padding: 0; margin-bottom: 10px; }
+  tr.off { display: none; }
+  td.num input { border: none; background: none; width: 3.5em; padding: 0; -moz-appearance: textfield; }
+  td.num input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  th, td { padding: 4px 6px; }
+  .flag { border: 1px solid #b38f00; }
+  a { color: #000; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>DSUR timeline back-planner</h1>
+  <p class="sub">Enter a data lock point (DLP). The planner fills in the calendar date of every milestone in the 60-day model from <em>Writing the DSUR</em> (Chapter 3, 3.2; Appendix C.1). Day 0 is the data lock point; only the day-60 limit comes from ICH E2F (&sect;2.2). Adjust the other days to the size of your program, but keep scope, templates and output shells settled before the data lock point.</p>
+
+  <div class="print-only" id="printHead"></div>
+
+  <section class="card no-print" aria-labelledby="inputsH">
+    <h2 id="inputsH" style="font-size:1.05rem;margin:0 0 10px">Inputs</h2>
+    <div class="controls">
+      <div>
+        <label for="dlp">Data lock point</label>
+        <input type="date" id="dlp">
+        <div class="hint">Day 0. The submission deadline is 60 calendar days later.</div>
+      </div>
+      <div>
+        <label for="dsurId">DSUR (for the printout, optional)</label>
+        <input type="text" id="dsurId" placeholder="e.g. XB-7 DSUR 5">
+      </div>
+      <div>
+        <label for="holidays">Public holidays to flag (optional)</label>
+        <textarea id="holidays" placeholder="One date per line, YYYY-MM-DD"></textarea>
+        <div class="hint">Dates listed here are flagged like weekends.</div>
+      </div>
+    </div>
+    <div class="buttons">
+      <button type="button" class="primary" id="btnPrint">Print</button>
+      <button type="button" id="btnCsv">Download CSV</button>
+      <button type="button" id="btnReset">Reset days to the book's model</button>
+      <button type="button" id="btnCaseB">Load Case B example (DLP 1 September 2026)</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="tblH">
+    <h2 id="tblH" style="font-size:1.05rem;margin:0 0 10px">Back-planned timeline</h2>
+    <div class="table-wrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th class="inc" scope="col">Include</th>
+            <th scope="col">Milestone</th>
+            <th scope="col">Day</th>
+            <th scope="col">Date</th>
+            <th scope="col">Weekend or holiday</th>
+            <th scope="col">Owner</th>
+            <th scope="col">What must be ready</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="note">The regional requirements row is an addition to the Chapter 3 model (Appendix C.1); it moves the discovery of regional needs to where they cost least. Untick a row to leave it out of the printout and the CSV.</p>
+  </section>
+
+  <section class="card" aria-labelledby="chkH" aria-live="polite">
+    <h2 id="chkH" style="font-size:1.05rem;margin:0 0 8px">Checks</h2>
+    <ul class="msgs" id="msgs"></ul>
+  </section>
+
+  <section class="card no-print" aria-labelledby="notesH">
+    <h2 id="notesH" style="font-size:1.05rem;margin:0 0 8px">Planning notes (Appendix C.2)</h2>
+    <ul class="msgs">
+      <li>Work back from the earliest deadline. When the 60th day falls on a weekend or public holiday, submit before it, not after. Where a region's deadline is earlier than day 60, rebuild the calendar backward from that deadline (set the day numbers accordingly).</li>
+      <li>Protect the key messages review. It is the milestone most often dropped under pressure, and dropping it costs the most (Chapter 17).</li>
+      <li>Set the late-breaking cut-off at the start of the consolidated review, and name its owner (Chapter 8).</li>
+      <li>Keep ten days between sign-off and the deadline for publishing, regional packaging and problems.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Companion material to <em>Writing the DSUR</em> (Selim Medical Press). Fictional data. Not regulatory advice. CC BY-NC 4.0.
+    Runs entirely in your browser; nothing you enter leaves this page.
+    <span class="print-only" id="printStamp"></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var MODEL = [
+    { id: "kickoff", name: "Kickoff and scope record", day: -63, owner: "Safety physician", ready: "Scope record signed; last year's commitments listed; section owners named" },
+    { id: "regional", name: "Regional requirements confirmed", day: -56, owner: "Regulatory affairs", ready: "Regional appendices matrix completed (Chapter 14)" },
+    { id: "shells", name: "Output shells agreed", day: -28, owner: "Biostatistics", ready: "Shells for every table and listing; programming on test data" },
+    { id: "dlp", name: "Data lock point", day: 0, owner: "Safety scientist", ready: "Sources frozen; extraction starts", fixed: true },
+    { id: "outputs", name: "Outputs delivered", day: 10, owner: "Biostatistics", ready: "Exposure, listings, tabulations, run dates recorded" },
+    { id: "keymsg", name: "Key messages review", day: 12, owner: "Safety physician", ready: "Key messages, Section 18 issue list, Section 19 changes, draft 18.2" },
+    { id: "draft1", name: "Draft 1 complete", day: 25, owner: "Medical writer", ready: "All sections drafted; late-breaking cut-off applied" },
+    { id: "review", name: "Consolidated review closes", day: 35, owner: "Medical writer", ready: "One set of comments, labeled and adjudicated" },
+    { id: "draft2", name: "Draft 2 and QC complete", day: 45, owner: "Medical writer", ready: "Two-layer QC done; QC log closed" },
+    { id: "signoff", name: "Sign-off", day: 50, owner: "Safety physician", ready: "Final QC done; approvals recorded" },
+    { id: "submit", name: "Submission deadline", day: 60, owner: "Regulatory affairs", ready: "Submitted in every region; confirmations filed" }
+  ];
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var WD = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  var state = MODEL.map(function (m) { return { day: m.day, include: true }; });
+
+  var $ = function (id) { return document.getElementById(id); };
+  var store = {
+    get: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* ignore */ } }
+  };
+
+  function parseISO(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((s || "").trim());
+    if (!m) return null;
+    var t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    var d = new Date(t);
+    if (d.getUTCMonth() !== +m[2] - 1) return null;
+    return t;
+  }
+  function addDays(t, n) { return t + n * 86400000; }
+  function iso(t) { var d = new Date(t); return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function longDate(t) { var d = new Date(t); return d.getUTCDate() + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
+  function weekday(t) { return WD[new Date(t).getUTCDay()]; }
+  function holidaySet() {
+    var set = {};
+    ($("holidays").value || "").split(/[\s,;]+/).forEach(function (x) { var t = parseISO(x); if (t !== null) set[iso(t)] = true; });
+    return set;
+  }
+  function isOff(t, hol) { var w = new Date(t).getUTCDay(); return w === 0 || w === 6 || !!hol[iso(t)]; }
+  function prevWorking(t, hol) { var x = t; var guard = 0; while (isOff(x, hol) && guard < 30) { x = addDays(x, -1); guard++; } return x; }
+  function dayLabel(n) { return n < 0 ? "−" + Math.abs(n) : String(n); }
+
+  function compute() {
+    var dlp = parseISO($("dlp").value);
+    var hol = holidaySet();
+    return MODEL.map(function (m, i) {
+      var day = state[i].day;
+      var r = { m: m, i: i, day: day, include: state[i].include, date: null, off: false, reason: "", moved: null };
+      if (dlp !== null && isFinite(day)) {
+        r.date = addDays(dlp, day);
+        if (isOff(r.date, hol) && !m.fixed) {
+          r.off = true;
+          var w = new Date(r.date).getUTCDay();
+          r.reason = (w === 0 || w === 6) ? weekday(r.date) : "Holiday";
+          r.moved = prevWorking(r.date, hol);
+        }
+      }
+      return r;
+    });
+  }
+
+  function build() {
+    var tb = $("rows");
+    tb.innerHTML = "";
+    MODEL.forEach(function (m, i) {
+      var tr = document.createElement("tr");
+      tr.id = "row-" + m.id;
+      if (m.fixed) tr.className = "dlp";
+      var dayInput = m.fixed
+        ? '<input type="number" value="0" disabled aria-label="Day for ' + m.name + ' (fixed at 0)">'
+        : '<input type="number" step="1" min="-365" max="365" value="' + state[i].day + '" aria-label="Day for ' + m.name + '" data-i="' + i + '">';
+      tr.innerHTML =
+        '<td class="inc"><input type="checkbox" ' + (state[i].include ? "checked " : "") + (m.fixed ? "disabled " : "") +
+        'aria-label="Include ' + m.name + '" data-inc="' + i + '"></td>' +
+        '<th scope="row" style="background:none;font-size:.92rem">' + m.name + '</th>' +
+        '<td class="num">' + dayInput + '</td>' +
+        '<td class="date" id="date-' + m.id + '">—</td>' +
+        '<td id="flag-' + m.id + '"></td>' +
+        '<td>' + m.owner + '</td>' +
+        '<td>' + m.ready + '</td>';
+      tb.appendChild(tr);
+    });
+  }
+
+  function render() {
+    var rows = compute();
+    var dlp = parseISO($("dlp").value);
+    rows.forEach(function (r) {
+      var tr = $("row-" + r.m.id);
+      tr.classList.toggle("off", !r.include);
+      $("date-" + r.m.id).innerHTML = r.date === null ? "—" : longDate(r.date) + ' <span class="wd">(' + weekday(r.date).slice(0, 3) + ')</span>';
+      $("flag-" + r.m.id).innerHTML = r.off
+        ? '<span class="flag">' + r.reason + "</span> move earlier to " + weekday(r.moved).slice(0, 3) + " " + longDate(r.moved)
+        : "";
+    });
+    // checks
+    var msgs = [];
+    var by = {}; rows.forEach(function (r) { by[r.m.id] = r; });
+    if (dlp === null) {
+      msgs.push(["warn", "Enter a data lock point to fill in the dates."]);
+    } else {
+      msgs.push(["ok", "Data lock point " + longDate(dlp) + "; E2F submission limit (day 60) " + longDate(addDays(dlp, 60)) + "."]);
+    }
+    var sub = by.submit;
+    if (!isFinite(sub.day)) msgs.push(["bad", "Enter a day number for the submission deadline."]);
+    else if (sub.day > 60) msgs.push(["bad", "The submission deadline is set to day " + sub.day + ". E2F sets day 60 after the data lock point as the limit."]);
+    var bad = rows.filter(function (r) { return r.include && !isFinite(r.day); });
+    if (bad.length) msgs.push(["bad", "Missing day number: " + bad.map(function (r) { return r.m.name; }).join(", ") + "."]);
+    var after = rows.filter(function (r) { return r.include && r.m.id !== "submit" && isFinite(r.day) && isFinite(sub.day) && r.day > sub.day; });
+    if (after.length) msgs.push(["bad", "After the submission deadline: " + after.map(function (r) { return r.m.name; }).join(", ") + "."]);
+    for (var k = 1; k < rows.length; k++) {
+      var a = rows[k - 1], b = rows[k];
+      if (a.include && b.include && isFinite(a.day) && isFinite(b.day) && b.day < a.day)
+        msgs.push(["warn", "“" + b.m.name + "” (day " + dayLabel(b.day) + ") comes before “" + a.m.name + "” (day " + dayLabel(a.day) + ")."]);
+    }
+    var pre = ["kickoff", "regional", "shells"].filter(function (id) { return by[id].include && isFinite(by[id].day) && by[id].day >= 0; });
+    if (pre.length) msgs.push(["warn", "Scope, regional requirements and output shells belong before the data lock point: " + pre.map(function (id) { return by[id].m.name; }).join(", ") + " is on or after day 0."]);
+    if (by.signoff.include && isFinite(by.signoff.day) && isFinite(sub.day)) {
+      var gap = sub.day - by.signoff.day;
+      if (gap < 10) msgs.push(["warn", "Only " + gap + " day" + (gap === 1 ? "" : "s") + " between sign-off and the submission deadline; keep at least ten (Appendix C.2)."]);
+      else msgs.push(["ok", gap + " days between sign-off and the submission deadline (at least ten recommended)."]);
+    }
+    if (!by.keymsg.include) msgs.push(["warn", "The key messages review is excluded. It is the milestone most often dropped under pressure, and dropping it costs the most."]);
+    if (dlp !== null) {
+      var offs = rows.filter(function (r) { return r.include && r.off; });
+      if (offs.length) msgs.push(["warn", offs.length + " milestone" + (offs.length === 1 ? " falls" : "s fall") + " on a weekend or holiday. Move " + (offs.length === 1 ? "it" : "them") + " earlier, not later."]);
+      else msgs.push(["ok", "No included milestone falls on a weekend or listed holiday."]);
+      if (by.review.include && isFinite(by.review.day)) {
+        msgs.push(["ok", "Late-breaking cut-off: set it at the start of the consolidated review (Appendix C.2); the review closes on day " + dayLabel(by.review.day) + ", " + longDate(by.review.date) + "."]);
+      }
+    }
+    $("msgs").innerHTML = msgs.map(function (m) { return '<li class="' + m[0] + '">' + m[1] + "</li>"; }).join("");
+    // print header
+    var id = $("dsurId").value.trim();
+    $("printHead").innerHTML = "<p><strong>" + (id ? escapeHtml(id) + " — " : "") + "Back-planned DSUR timeline</strong><br>" +
+      (dlp !== null ? "Data lock point: " + longDate(dlp) + " (day 0). Day 60: " + longDate(addDays(dlp, 60)) + "." : "No data lock point entered.") + "</p>";
+    $("printStamp").textContent = " Printed " + new Date().toLocaleString() + ".";
+    store.set("dsurbp.dlp", $("dlp").value);
+    store.set("dsurbp.id", $("dsurId").value);
+    store.set("dsurbp.hol", $("holidays").value);
+    store.set("dsurbp.state", JSON.stringify(state));
+  }
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function csvCell(v) { v = v === null || v === undefined ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+
+  function csv() {
+    var rows = compute();
+    var out = [["Milestone", "Day", "Date", "Weekday", "Weekend or holiday", "Move earlier to", "Owner", "What must be ready"]];
+    rows.forEach(function (r) {
+      if (!r.include) return;
+      out.push([r.m.name, isFinite(r.day) ? r.day : "", r.date === null ? "" : iso(r.date), r.date === null ? "" : weekday(r.date),
+        r.off ? r.reason : "", r.moved === null ? "" : iso(r.moved), r.m.owner, r.m.ready]);
+    });
+    out.push([]);
+    out.push(["Companion material to Writing the DSUR (Selim Medical Press). Fictional data. Not regulatory advice. CC BY-NC 4.0."]);
+    return out.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
+  }
+
+  function download() {
+    var text = "﻿" + csv();
+    var dlp = $("dlp").value || "no-dlp";
+    var name = "dsur-timeline-" + dlp + ".csv";
+    try {
+      var blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      if (window.navigator && window.navigator.msSaveOrOpenBlob) { window.navigator.msSaveOrOpenBlob(blob, name); return; }
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    } catch (e) {
+      window.open("data:text/csv;charset=utf-8," + encodeURIComponent(text));
+    }
+  }
+
+  function resetDays() {
+    state = MODEL.map(function (m) { return { day: m.day, include: true }; });
+    build(); render();
+  }
+
+  // restore
+  var saved = store.get("dsurbp.state");
+  if (saved) { try { var s = JSON.parse(saved); if (Array.isArray(s) && s.length === MODEL.length) state = s.map(function (x, i) { return { day: x.day === null ? NaN : +x.day, include: MODEL[i].fixed ? true : !!x.include }; }); state[3].day = 0; } catch (e) { /* ignore */ } }
+  $("dlp").value = store.get("dsurbp.dlp") || "";
+  $("dsurId").value = store.get("dsurbp.id") || "";
+  $("holidays").value = store.get("dsurbp.hol") || "";
+  build(); render();
+  $("rows").addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.dataset.i !== undefined) {
+      var v = parseInt(t.value, 10);
+      state[+t.dataset.i].day = isNaN(v) ? NaN : v;
+      render();
+    }
+  });
+  $("rows").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.dataset.inc !== undefined) { state[+t.dataset.inc].include = t.checked; render(); }
+  });
+
+  ["dlp", "dsurId", "holidays"].forEach(function (id) { $(id).addEventListener("input", render); $(id).addEventListener("change", render); });
+  $("btnPrint").addEventListener("click", function () { render(); window.print(); });
+  $("btnCsv").addEventListener("click", download);
+  $("btnReset").addEventListener("click", resetDays);
+  $("btnCaseB").addEventListener("click", function () { $("dlp").value = "2026-09-01"; $("dsurId").value = "XB-7 DSUR 5 (Case B, fictional)"; resetDays(); });
+
+  window.DSURPlanner = { compute: compute, csv: csv, longDate: longDate };
+})();
+</script>
+</body>
+</html>

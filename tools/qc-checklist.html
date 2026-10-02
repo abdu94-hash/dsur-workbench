@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSUR QC Checklist</title>
+<meta name="description" content="Interactive version of Appendix B (Section-Level QC Checklist) from Writing the DSUR: mark each check Pass, Issue or N/A, add comments, and print a dated record.">
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #1d2733; --muted: #5a6878; --line: #d6dde6; --head: #e8edf4;
+  --accent: #1f4e8c; --accent-ink: #ffffff;
+  --pass: #1d6b3a; --pass-bg: #e3f3e8; --issue: #8a1c17; --issue-bg: #fde2e1; --na: #4f5b69; --na-bg: #eceff3;
+  --hy: #fff8e1; --hy-line: #e3c56b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171d; --card: #1a2129; --ink: #e4e9ef; --muted: #9aa8b8; --line: #2e3945; --head: #24303c;
+    --accent: #7fb0f0; --accent-ink: #0d1520;
+    --pass: #8fd6a8; --pass-bg: #173323; --issue: #f5b3ae; --issue-bg: #44201e; --na: #b6c1cd; --na-bg: #27303a;
+    --hy: #2c2714; --hy-line: #8a7426;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+h2 { font-size: 1.1rem; margin: 0 0 10px; }
+.sub { color: var(--muted); margin: 0 0 18px; max-width: 75ch; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 16px; }
+label.f { display: block; font-weight: 600; font-size: .88rem; margin-bottom: 4px; }
+input[type="text"], input[type="date"], select, textarea {
+  width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px;
+}
+textarea { min-height: 34px; resize: vertical; font-size: .9rem; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+button { font: inherit; font-weight: 600; border-radius: 6px; padding: 7px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--card); color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); }
+.toolbar .sp { flex: 1; }
+.filter label { font-size: .88rem; margin-right: 10px; white-space: nowrap; }
+table.sum { border-collapse: collapse; width: 100%; font-size: .9rem; }
+table.sum th, table.sum td { border-bottom: 1px solid var(--line); padding: 5px 8px; text-align: right; }
+table.sum th:first-child, table.sum td:first-child { text-align: left; }
+table.sum thead th { background: var(--head); }
+table.sum tfoot td { font-weight: 700; }
+.c-pass { color: var(--pass); } .c-issue { color: var(--issue); } .c-na { color: var(--na); }
+.group { margin-bottom: 18px; }
+.group.hy { background: var(--hy); border-color: var(--hy-line); }
+.group h2 { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.group h2 small { font-weight: 400; color: var(--muted); font-size: .82rem; }
+fieldset.item { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 10px 0; }
+fieldset.item:first-of-type { border-top: 0; }
+fieldset.item legend { float: left; width: 100%; padding: 0; margin-bottom: 6px; font-size: .95rem; }
+fieldset.item legend .n { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+.row2 { clear: both; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; align-items: start; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg label { position: relative; padding: 5px 12px; font-size: .86rem; font-weight: 600; cursor: pointer; border-left: 1px solid var(--line); user-select: none; }
+.seg label:first-child { border-left: 0; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
+.seg label.on.pass { background: var(--pass-bg); color: var(--pass); }
+.seg label.on.issue { background: var(--issue-bg); color: var(--issue); }
+.seg label.on.na { background: var(--na-bg); color: var(--na); }
+.item.st-issue textarea { border-color: var(--issue); }
+.item .pstat, .item .pcom { display: none; }
+.hidden { display: none !important; }
+.note { color: var(--muted); font-size: .82rem; }
+.print-only { display: none; }
+footer { color: var(--muted); font-size: .8rem; margin-top: 24px; }
+@media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } table.sum th, table.sum td { padding: 5px 4px; font-size: .82rem; } }
+@media print {
+  :root { --bg: #fff; --card: #fff; --ink: #000; --muted: #444; --line: #aaa; --head: #e8edf4; --hy: #fff; --hy-line: #aaa; }
+  body { font-size: 9.5pt; }
+  main { padding: 0; max-width: none; }
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+  .card { border: 1px solid #bbb; padding: 8px 10px; margin-bottom: 8px; border-radius: 0; break-inside: auto; }
+  .hidden { display: block !important; }
+  fieldset.item { padding: 4px 0; break-inside: avoid; display: block; }
+  .sub { display: none; }
+  fieldset.item legend { float: none; margin: 0; font-size: 9.5pt; }
+  .row2 { display: none; }
+  .item .pstat { display: inline; float: right; margin-left: 12px; font-weight: 700; white-space: nowrap; }
+  .item .pcom { display: block; font-style: italic; color: #333; padding-left: 1.6em; }
+  .item .pcom:empty { display: none; }
+  .group h2 { font-size: 11pt; margin: 0 0 4px; }
+  table.sum th, table.sum td { padding: 2px 6px; }
+  .sig { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .sig div { border-top: 1px solid #000; padding-top: 3px; font-size: 9pt; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>DSUR section-level QC checklist</h1>
+  <p class="sub">The interactive version of Appendix B of <em>Writing the DSUR</em>. This checklist collects the chapter checklists in one place, grouped by the stage of the DSUR they check. Use it on the review draft and again on the final (Chapter 15). Start with the five high-yield checks, which find most of the errors that reach assessors and inspectors. Mark each check Pass, Issue or N/A, add a comment where needed, and print a dated record for the DSUR file.</p>
+
+  <div class="print-only" id="printHead"></div>
+
+  <section class="card no-print" aria-labelledby="recH">
+    <h2 id="recH">Record details</h2>
+    <div class="fields">
+      <div><label class="f" for="dsurId">DSUR identifier</label><input type="text" id="dsurId" placeholder="e.g. XB-7 DSUR 5"></div>
+      <div><label class="f" for="draft">Version checked</label>
+        <select id="draft"><option value="Review draft">Review draft</option><option value="Final">Final</option><option value="Other">Other</option></select></div>
+      <div><label class="f" for="reviewer">Reviewer</label><input type="text" id="reviewer" placeholder="Name and function"></div>
+      <div><label class="f" for="revDate">Date of review</label><input type="date" id="revDate"></div>
+    </div>
+    <div class="toolbar">
+      <button type="button" class="primary" id="btnPrint">Print record</button>
+      <button type="button" id="btnCsv">Download CSV</button>
+      <button type="button" id="btnClear">Clear all</button>
+      <span class="sp"></span>
+      <span class="filter" role="group" aria-label="Show">
+        <label><input type="radio" name="show" value="all" checked> All</label>
+        <label><input type="radio" name="show" value="open"> Not checked</label>
+        <label><input type="radio" name="show" value="issue"> Issues</label>
+      </span>
+    </div>
+    <p class="note" style="margin:10px 0 0">Your entries are kept in this browser only (if storage is available). Nothing leaves this page.</p>
+  </section>
+
+  <section class="card" aria-labelledby="sumH" aria-live="polite">
+    <h2 id="sumH">Summary</h2>
+    <div style="overflow-x:auto">
+    <table class="sum">
+      <thead><tr><th scope="col">Group</th><th scope="col">Checks</th><th scope="col" class="c-pass">Pass</th><th scope="col" class="c-issue">Issue</th><th scope="col" class="c-na">N/A</th><th scope="col">Not checked</th></tr></thead>
+      <tbody id="sumBody"></tbody>
+      <tfoot id="sumFoot"></tfoot>
+    </table>
+    </div>
+  </section>
+
+  <div id="groups"></div>
+
+  <section class="card print-only" aria-label="Signature">
+    <div class="sig"><div>Reviewer signature</div><div>Date</div></div>
+  </section>
+
+  <footer>
+    Source: Appendix B, Section-Level QC Checklist, of <em>Writing the DSUR</em>; each item is quoted verbatim. Use it on the review draft and again on the final (Chapter 15).<br>
+    Companion material to <em>Writing the DSUR</em> (Selim Medical Press). Fictional data. Not regulatory advice. CC BY-NC 4.0.
+    <span class="print-only" id="printStamp"></span>
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var DATA = {"groups": [{"title": "The five high-yield checks", "items": ["RSI edition. Section 7.1 names the RSI in effect at the start of the period; Section 4 describes any IB change during the period; the expectedness column in the listings uses the RSI named in Section 7.1.", "Exposure method. Section 6 states the method, including estimation for blinded trials; every rate in the report uses the same exposure, units and cutoff.", "Listing selection. Section 7.2 states the selection rule; the listings contain exactly those cases; the count in the text matches the listing.", "SAE totals. Counts of SAEs, SARs and deaths match across the Executive Summary, Section 7, Section 18 and the appendices, or the difference is explained.", "Sections 18 and 20. Every action in Section 20 is justified in Section 18, and every issue that Section 18 says needs action appears in Section 20."]}, {"title": "Scope and process (Chapters 1 to 3)", "items": ["The team can state, in one sentence, what this year's DSUR needs to conclude.", "Every significant safety issue has already been communicated through the appropriate expedited or ad hoc route.", "The DIBD (or IBD) and its source are recorded, and the DLP and deadline derive from it correctly.", "The decision on one DSUR or several is written down, with a rationale, and the other DSURs are named.", "Any combination option is stated, with a rationale.", "Every excluded source or data gap has explanatory wording in Section 1.", "The title page includes the DSUR number, a confidentiality statement and, if applicable, the unblinding caution.", "Section 2 is a brief narrative.", "The kickoff was held and the scope record signed before the data lock point.", "Output shells were agreed and programming started on test data.", "Every section and data source has a named owner.", "The key messages review was held before the judgment sections were drafted.", "There was one consolidated review, with comments adjudicated and marked by weight.", "Late-breaking information has an owner and a cut-off date.", "At least ten days separate sign-off from the submission deadline."]}, {"title": "The data layer (Chapters 4 to 7)", "items": ["Section 7.1 names the RSI document, edition and date, and the MedDRA version.", "The RSI is the edition in effect at the start of the period.", "Section 4 lists only significant safety-related changes, each cross-referenced.", "A revised IB not yet submitted is attached.", "Every SUSAR expedited in the period appears in the interval line listing, and any difference in expectedness is explained.", "Every trial ongoing or completed in the period is in the inventory, with its status defined as E2F defines it.", "Blinded exposure is estimated from the randomization scheme, and no data were unblinded for the report.", "Extension subjects are not double-counted.", "Subject-time is provided where exposure time differs.", "A method paragraph states the exposure method and its limits.", "Exposure is split the same way as the SAE tabulations.", "Section 7.2 states the case selection rule; the listing is ordered by trial and System Organ Class.", "Each subject appears once per episode, under the most serious reaction.", "The cumulative tabulation includes all SAEs, only seriousness-defining terms, and a blinded column.", "Every exclusion is stated in the text and footnoted in the table.", "The clinical and safety databases have been reconciled.", "Section 7 contains no analysis.", "An intake log covers the period for Sections 9 to 15, with a relevance screen for each item.", "For a marketed drug, Section 11 reflects the most recent PBRER and any later signals.", "The literature search is described, with dates.", "Section 15 is used only for serious or life-threatening indications.", "Every empty section says what was considered."]}, {"title": "The judgment layer (Chapters 8 to 12)", "items": ["Every significant action in the period is in Section 3, with source, date, reason and trials affected; updates to earlier actions are included.", "IB changes are in Section 4 and cross-referenced from Section 3.", "Appendix 2 is cumulative, and each request's status is current.", "Section 17 items meet the agreed bar, and each is reflected in Section 18.", "Each trial is in the right subsection of Section 8 according to E2F's definition of completed.", "Each finding is classified as new, confirmatory, refuting or not informative.", "Ongoing-trial information is limited to what can be said without unblinding.", "Long-term follow-up is reported with subject-time, including the absence of expected delayed events.", "The list of Section 18 issues was agreed at the key messages review.", "Each issue follows the five steps and ends with an implication for subjects.", "Every rate has a denominator, and every comparison names its reference; background rates are cited and matched to the population.", "Every relevant item from Sections 3, 4, 8 to 15 and 17 is evaluated in Section 18.", "No paragraph of Section 18 merely repeats an earlier section.", "Every risk in Section 19 was re-evaluated this year, with new information marked, and has a status of important identified or important potential.", "Resolved risks are kept in Section 19, with a brief explanation.", "Each Section 19 entry states the measures that protect trial subjects.", "Section 19 agrees with the IB, protocols, consent forms and any risk management plan.", "Section 18.2 names the anticipated benefit and its evidence, and states whether the balance has changed.", "Section 20 states changes in knowledge and actions taken and planned, with cross-references.", "The Executive Summary covers every item E2F lists, contains nothing that is not in the body, and passes the stand-alone test.", "Sections 18.2 and 20 and the Executive Summary agree."]}, {"title": "Craft, regions and quality (Chapters 13 to 15)", "items": ["Every number states its period, population and denominator; percentages give n/N; rates give units.", "No causal language is used without a causality assessment.", "Each risk has one name throughout, per the terminology sheet.", "Key figures match their single source everywhere.", "Tables in Section 18 make an argument; storage tables are in appendices.", "Any AI-assisted text has been verified against source.", "Regional requirements are in the scope record, with owners, and the timeline is built on the earliest regional deadline.", "Regional appendices add data without changing the core assessment.", "The ethics committee version, where needed, is the title page, Executive Summary and any required listings.", "Regional content has been checked against current requirements.", "Traceability QC and logic QC were done by different people, neither of them the author.", "QC findings are classified, logged with their resolution, and closed.", "The DSUR file contains the scope record, extracts, outputs, comments, QC log, approvals and submission confirmations."]}, {"title": "Special situations (Chapter 16)", "items": ["A first DSUR has a complete scope record, and every empty section says why it is empty.", "A first Summary of Important Risks states the basis of each risk.", "A final DSUR says it is final for the region, where development continues and where follow-up will be reported.", "A program on hold reports the hold, the status of subjects, the assessment and the conditions for resuming.", "Pediatric exposure and events are presented separately, by meaningful age groups.", "Advanced therapy products report follow-up time and describe cases individually.", "After approval, the DSUR and PBRER share one safety assessment, one risk list and a deliberate RSI choice."]}, {"title": "Sign-off (Chapter 17)", "items": ["The executives who will sign attended the key messages review.", "Every executive comment is labeled must-fix or preference, and all must-fix comments are resolved, with the resolution recorded.", "Each signatory can answer yes to the five questions in Chapter 17."]}]};
+  var LABEL = { pass: "Pass", issue: "Issue", na: "N/A" };
+  var KEY = "dsurqc.v1";
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { meta: {}, items: {} };
+  var store = {
+    get: function () { try { return JSON.parse(window.localStorage.getItem(KEY) || "null"); } catch (e) { return null; } },
+    set: function () { try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } },
+    clear: function () { try { window.localStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
+  };
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function todayISO() { var d = new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  function longDate(isoS) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoS || ""); return m ? (+m[3]) + " " + MONTHS[+m[2] - 1] + " " + m[1] : ""; }
+
+  function itemHtml(text, hy) {
+    if (!hy) return esc(text);
+    var k = text.indexOf(". ");
+    return k > 0 && k < 40 ? "<strong>" + esc(text.slice(0, k + 1)) + "</strong>" + esc(text.slice(k + 1)) : esc(text);
+  }
+
+  function build() {
+    var wrap = $("groups");
+    var html = "";
+    var n = 0;
+    DATA.groups.forEach(function (g, gi) {
+      var hy = gi === 0;
+      html += '<section class="card group' + (hy ? " hy" : "") + '" id="g' + gi + '" aria-labelledby="gh' + gi + '">' +
+        '<h2 id="gh' + gi + '"><span>' + esc(g.title) + '</span><small id="gc' + gi + '"></small></h2>';
+      g.items.forEach(function (t, ii) {
+        n++;
+        var id = "i" + gi + "_" + ii;
+        html += '<fieldset class="item" id="f_' + id + '" data-id="' + id + '">' +
+          '<legend><span class="pstat" id="ps_' + id + '">Not checked</span><span class="n">' + (hy ? "HY" + (ii + 1) : n - DATA.groups[0].items.length) + '.</span>' + itemHtml(t, hy) + "</legend>" +
+          '<div class="row2"><div class="seg">' +
+          ["pass", "issue", "na"].map(function (v) {
+            return '<label class="' + v + '"><input type="radio" name="s_' + id + '" value="' + v + '"><span>' + LABEL[v] + "</span></label>";
+          }).join("") +
+          '</div><div><label class="hidden" for="c_' + id + '">Comment</label>' +
+          '<textarea id="c_' + id + '" rows="1" placeholder="Comment (location, finding, action)" aria-label="Comment"></textarea></div></div>' +
+          '<div class="pcom" id="pc_' + id + '"></div>' +
+          "</fieldset>";
+      });
+      html += "</section>";
+    });
+    wrap.innerHTML = html;
+  }
+
+  function apply() {
+    ["dsurId", "draft", "reviewer", "revDate"].forEach(function (k) { if (state.meta[k] !== undefined) $(k).value = state.meta[k]; });
+    if (!$("revDate").value) $("revDate").value = todayISO();
+    Object.keys(state.items).forEach(function (id) {
+      var it = state.items[id];
+      if (it.s) { var r = document.querySelector('input[name="s_' + id + '"][value="' + it.s + '"]'); if (r) r.checked = true; }
+      var c = $("c_" + id); if (c && it.c) c.value = it.c;
+    });
+  }
+
+  function refresh() {
+    var showEl = document.querySelector('input[name="show"]:checked');
+    var show = showEl ? showEl.value : "all";
+    var tot = { n: 0, pass: 0, issue: 0, na: 0, open: 0 };
+    var rowsHtml = "";
+    DATA.groups.forEach(function (g, gi) {
+      var c = { n: 0, pass: 0, issue: 0, na: 0, open: 0 };
+      g.items.forEach(function (t, ii) {
+        var id = "i" + gi + "_" + ii;
+        var it = state.items[id] || {};
+        var s = it.s || "";
+        c.n++; if (s) c[s]++; else c.open++;
+        var f = $("f_" + id);
+        f.className = "item" + (s ? " st-" + s : "");
+        f.querySelectorAll(".seg label").forEach(function (l) { l.classList.toggle("on", l.querySelector("input").checked); });
+        $("ps_" + id).textContent = s ? LABEL[s] : "Not checked";
+        $("pc_" + id).textContent = it.c ? "Comment: " + it.c : "";
+        var vis = show === "all" || (show === "open" && !s) || (show === "issue" && s === "issue");
+        f.classList.toggle("hidden", !vis);
+      });
+      var anyVis = g.items.some(function (t, ii) { return !$("f_i" + gi + "_" + ii).classList.contains("hidden"); });
+      $("g" + gi).classList.toggle("hidden", !anyVis);
+      $("gc" + gi).textContent = (c.n - c.open) + " of " + c.n + " checked" + (c.issue ? ", " + c.issue + " issue" + (c.issue > 1 ? "s" : "") : "");
+      ["n", "pass", "issue", "na", "open"].forEach(function (k) { tot[k] += c[k]; });
+      rowsHtml += "<tr><td>" + esc(g.title) + "</td><td>" + c.n + '</td><td class="c-pass">' + c.pass + '</td><td class="c-issue">' + c.issue + '</td><td class="c-na">' + c.na + "</td><td>" + c.open + "</td></tr>";
+    });
+    $("sumBody").innerHTML = rowsHtml;
+    $("sumFoot").innerHTML = "<tr><td>Total</td><td>" + tot.n + '</td><td class="c-pass">' + tot.pass + '</td><td class="c-issue">' + tot.issue + '</td><td class="c-na">' + tot.na + "</td><td>" + tot.open + "</td></tr>";
+    var m = state.meta;
+    $("printHead").innerHTML =
+      '<h2 style="margin:0 0 4px">QC record: ' + esc(m.dsurId || "[DSUR not named]") + "</h2>" +
+      "<p style=\"margin:0 0 8px\">Version checked: " + esc(m.draft || "") + " &middot; Reviewer: " + esc(m.reviewer || "[not named]") +
+      " &middot; Date of review: " + esc(longDate(m.revDate) || "[no date]") + "<br>" +
+      "Result: " + tot.pass + " pass, " + tot.issue + " issue" + (tot.issue === 1 ? "" : "s") + ", " + tot.na + " not applicable, " + tot.open + " not checked, of " + tot.n + " checks.</p>";
+    $("printStamp").textContent = " Record printed " + new Date().toLocaleString() + ".";
+    window.__qcTotals = tot;
+  }
+
+  function save() {
+    state.meta = { dsurId: $("dsurId").value, draft: $("draft").value, reviewer: $("reviewer").value, revDate: $("revDate").value };
+    store.set();
+  }
+
+  function csvCell(v) { v = v == null ? "" : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function csv() {
+    var m = state.meta, out = [];
+    out.push(["DSUR", m.dsurId || ""]); out.push(["Version checked", m.draft || ""]); out.push(["Reviewer", m.reviewer || ""]); out.push(["Date of review", m.revDate || ""]);
+    out.push([]);
+    out.push(["Group", "No.", "Check", "Result", "Comment"]);
+    var n = 0;
+    DATA.groups.forEach(function (g, gi) {
+      g.items.forEach(function (t, ii) {
+        var id = "i" + gi + "_" + ii, it = state.items[id] || {};
+        var no = gi === 0 ? "HY" + (ii + 1) : String(++n);
+        out.push([g.title, no, t, it.s ? LABEL[it.s] : "Not checked", it.c || ""]);
+      });
+    });
+    out.push([]);
+    out.push(["Companion material to Writing the DSUR (Selim Medical Press). Fictional data. Not regulatory advice. CC BY-NC 4.0."]);
+    return out.map(function (r) { return r.map(csvCell).join(","); }).join("\r\n");
+  }
+  function download() {
+    var text = "﻿" + csv();
+    var name = "dsur-qc-record-" + ((state.meta.dsurId || "dsur").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "dsur") + "-" + (state.meta.revDate || todayISO()) + ".csv";
+    try {
+      var blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    } catch (e) { window.open("data:text/csv;charset=utf-8," + encodeURIComponent(text)); }
+  }
+
+  build();
+  var saved = store.get();
+  if (saved && saved.items) state = { meta: saved.meta || {}, items: saved.items };
+  apply(); save(); refresh();
+
+  $("groups").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.type === "radio" && t.name.indexOf("s_") === 0) {
+      var id = t.name.slice(2);
+      state.items[id] = state.items[id] || {};
+      state.items[id].s = t.value;
+      save(); refresh();
+    }
+  });
+  $("groups").addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.tagName === "TEXTAREA") {
+      var id = t.id.slice(2);
+      state.items[id] = state.items[id] || {};
+      state.items[id].c = t.value;
+      $("pc_" + id).textContent = t.value ? "Comment: " + t.value : "";
+      save();
+    }
+  });
+  ["dsurId", "draft", "reviewer", "revDate"].forEach(function (k) { $(k).addEventListener("input", function () { save(); refresh(); }); $(k).addEventListener("change", function () { save(); refresh(); }); });
+  document.querySelectorAll('input[name="show"]').forEach(function (r) { r.addEventListener("change", refresh); });
+  $("btnPrint").addEventListener("click", function () { save(); refresh(); window.print(); });
+  $("btnCsv").addEventListener("click", function () { save(); download(); });
+  $("btnClear").addEventListener("click", function () {
+    if (!window.confirm("Clear every result, comment and record detail?")) return;
+    state = { meta: {}, items: {} }; store.clear();
+    build(); apply(); save(); refresh();
+  });
+  window.addEventListener("beforeprint", function () { save(); refresh(); });
+  window.DSURQC = { csv: csv, state: function () { return state; } };
+})();
+</script>
+</body>
+</html>
